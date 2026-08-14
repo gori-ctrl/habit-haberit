@@ -6,20 +6,21 @@
 <title>習慣トラッカー</title>
 
 <link rel="manifest" href="./manifest.json" />
-<meta name="theme-color" content="#FF6B4A" />
+<meta name="theme-color" content="#0B0B0F" />
 
 <meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="習慣トラッカー" />
 <link rel="apple-touch-icon" href="./icon-180.png" />
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
 
 <style>
-  html, body { margin: 0; padding: 0; background: #FFFBF5; }
+  html, body { margin: 0; padding: 0; background: #0B0B0F; }
   * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
   input[type="text"] { font-family: inherit; }
+  ::selection { background: #B4FF39; color: #0B0B0F; }
 </style>
 </head>
 <body>
@@ -33,8 +34,49 @@
 const { useState, useEffect, useCallback } = React;
 const HABITS_KEY = "habit-list";
 const COMPLETIONS_KEY = "habit-completions";
-const EMOJIS = ["💪", "📖", "🧘", "🏃", "💧", "🎯", "🧠", "🎨", "🌱", "😴"];
-const COLORS = ["#FF6B4A", "#2EC4B6", "#FFC145", "#6C5CE7", "#00B894"];
+const ACCENT = "#B4FF39";
+
+const CATEGORIES = [
+  {
+    key: "health",
+    label: "健康",
+    presets: [
+      { name: "運動する", emoji: "🏃" },
+      { name: "水を飲む", emoji: "💧" },
+      { name: "ストレッチ", emoji: "🧘" },
+      { name: "野菜を食べる", emoji: "🥗" },
+      { name: "早く寝る", emoji: "🌙" },
+    ],
+  },
+  {
+    key: "learning",
+    label: "学習",
+    presets: [
+      { name: "読書", emoji: "📖" },
+      { name: "語学学習", emoji: "🎧" },
+      { name: "日記を書く", emoji: "✍️" },
+      { name: "コーディング", emoji: "💻" },
+    ],
+  },
+  {
+    key: "mind",
+    label: "マインド",
+    presets: [
+      { name: "瞑想", emoji: "🧠" },
+      { name: "感謝を書く", emoji: "🙏" },
+      { name: "スマホ断ち", emoji: "📵" },
+    ],
+  },
+  {
+    key: "life",
+    label: "生活",
+    presets: [
+      { name: "掃除", emoji: "🧹" },
+      { name: "家計簿をつける", emoji: "💰" },
+      { name: "植物の世話", emoji: "🌱" },
+    ],
+  },
+];
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
@@ -63,9 +105,7 @@ function computeStreak(doneDates) {
 
 function last7Days() {
   const days = [];
-  for (let i = -6; i <= 0; i++) {
-    days.push(dateStrOffset(i));
-  }
+  for (let i = -6; i <= 0; i++) days.push(dateStrOffset(i));
   return days;
 }
 
@@ -78,18 +118,17 @@ function HabitCard({ habit, doneDates, onToggleToday, onDelete }) {
 
   return (
     <div style={{
-      background: "#FFFFFF", borderRadius: 18, padding: "16px 18px",
-      boxShadow: "0 2px 10px rgba(43,43,43,0.06)", marginBottom: 14,
-      border: doneToday ? `2px solid ${habit.color}` : "2px solid transparent",
+      background: "#16161C", borderRadius: 16, padding: "16px 18px",
+      marginBottom: 12, border: doneToday ? `1px solid ${ACCENT}` : "1px solid #26262E",
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 26 }}>{habit.emoji}</span>
+          <span style={{ fontSize: 22 }}>{habit.emoji}</span>
           <div>
-            <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#2B2B2B", fontFamily: "'Baloo 2', sans-serif" }}>{habit.name}</p>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#F5F5F7", fontFamily: "'Space Grotesk', sans-serif" }}>{habit.name}</p>
             {streak > 0 && (
-              <p style={{ margin: "2px 0 0", fontSize: 12, color: "#FF6B4A", fontWeight: 600 }}>
-                🔥 {streak}日連続
+              <p style={{ margin: "2px 0 0", fontSize: 11, color: ACCENT, fontWeight: 600 }}>
+                {streak}日連続
               </p>
             )}
           </div>
@@ -97,7 +136,7 @@ function HabitCard({ habit, doneDates, onToggleToday, onDelete }) {
         <button
           onClick={() => onDelete(habit.id)}
           aria-label="この習慣を削除"
-          style={{ background: "transparent", border: "none", color: "#C9C4BC", fontSize: 12, cursor: "pointer", padding: 4 }}
+          style={{ background: "transparent", border: "none", color: "#4E4E58", fontSize: 11, cursor: "pointer", padding: 4 }}
         >
           削除
         </button>
@@ -110,13 +149,13 @@ function HabitCard({ habit, doneDates, onToggleToday, onDelete }) {
           const dow = new Date(d + "T00:00:00").getDay();
           return (
             <div key={d} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-              <span style={{ fontSize: 10, color: "#B8B2A8" }}>{weekdayLabels[dow]}</span>
+              <span style={{ fontSize: 9, color: "#4E4E58" }}>{weekdayLabels[dow]}</span>
               <div style={{
-                width: 26, height: 26, borderRadius: "50%",
-                background: done ? habit.color : "#F2EFE9",
-                border: isToday ? `2px solid ${habit.color}` : "2px solid transparent",
+                width: 24, height: 24, borderRadius: 7,
+                background: done ? ACCENT : "#1E1E26",
+                border: isToday ? `1px solid ${ACCENT}` : "1px solid transparent",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 12, color: done ? "#fff" : "#C9C4BC",
+                fontSize: 11, color: done ? "#0B0B0F" : "#4E4E58", fontWeight: 700,
               }}>
                 {done ? "✓" : ""}
               </div>
@@ -128,15 +167,64 @@ function HabitCard({ habit, doneDates, onToggleToday, onDelete }) {
       <button
         onClick={() => onToggleToday(habit.id)}
         style={{
-          width: "100%", padding: "12px 0", borderRadius: 12, border: "none",
-          background: doneToday ? "#F2EFE9" : habit.color,
-          color: doneToday ? "#8A8478" : "#fff",
-          fontSize: 14, fontWeight: 700, cursor: "pointer",
-          fontFamily: "'Baloo 2', sans-serif",
+          width: "100%", padding: "11px 0", borderRadius: 10, border: doneToday ? "1px solid #26262E" : "none",
+          background: doneToday ? "transparent" : ACCENT,
+          color: doneToday ? "#8B8B95" : "#0B0B0F",
+          fontSize: 13, fontWeight: 700, cursor: "pointer",
+          fontFamily: "'Space Grotesk', sans-serif",
         }}
       >
-        {doneToday ? "✓ 今日は完了しました" : "今日のチェックを付ける"}
+        {doneToday ? "完了済み" : "今日のチェックを付ける"}
       </button>
+    </div>
+  );
+}
+
+function AddHabitPanel({ onAdd, onClose }) {
+  const [activeCategory, setActiveCategory] = useState(CATEGORIES[0].key);
+  const category = CATEGORIES.find((c) => c.key === activeCategory);
+
+  return (
+    <div style={{ background: "#16161C", border: "1px solid #26262E", borderRadius: 16, padding: "16px 18px", marginTop: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+        <p style={{ fontSize: 14, fontWeight: 700, margin: 0, color: "#F5F5F7", fontFamily: "'Space Grotesk', sans-serif" }}>習慣を選ぶ</p>
+        <button onClick={onClose} style={{ background: "transparent", border: "none", color: "#8B8B95", fontSize: 13, cursor: "pointer" }}>閉じる</button>
+      </div>
+
+      <div style={{ display: "flex", gap: 6, marginBottom: 14, overflowX: "auto" }}>
+        {CATEGORIES.map((c) => (
+          <button
+            key={c.key}
+            onClick={() => setActiveCategory(c.key)}
+            style={{
+              flexShrink: 0, fontSize: 12, padding: "6px 14px", borderRadius: 999,
+              border: activeCategory === c.key ? `1px solid ${ACCENT}` : "1px solid #26262E",
+              background: activeCategory === c.key ? "rgba(180,255,57,0.1)" : "transparent",
+              color: activeCategory === c.key ? ACCENT : "#8B8B95",
+              fontWeight: 600, cursor: "pointer", fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        {category.presets.map((p) => (
+          <button
+            key={p.name}
+            onClick={() => onAdd(p)}
+            style={{
+              display: "flex", alignItems: "center", gap: 8, padding: "10px 12px",
+              borderRadius: 10, border: "1px solid #26262E", background: "#1E1E26",
+              color: "#F5F5F7", fontSize: 12, fontWeight: 500, cursor: "pointer", textAlign: "left",
+            }}
+          >
+            <span style={{ fontSize: 17 }}>{p.emoji}</span>
+            <span>{p.name}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -145,10 +233,7 @@ function HabitTracker() {
   const [habits, setHabits] = useState([]);
   const [completions, setCompletions] = useState({});
   const [loading, setLoading] = useState(true);
-  const [newName, setNewName] = useState("");
-  const [newEmoji, setNewEmoji] = useState(EMOJIS[0]);
   const [showAdd, setShowAdd] = useState(false);
-  const [error, setError] = useState("");
 
   const load = useCallback(() => {
     setLoading(true);
@@ -172,25 +257,20 @@ function HabitTracker() {
     localStorage.setItem(COMPLETIONS_KEY, JSON.stringify(nextCompletions));
   }
 
-  function handleAddHabit() {
-    setError("");
-    const name = newName.trim();
-    if (!name) {
-      setError("習慣の名前を入力してください");
+  function handleAddPreset(preset) {
+    if (habits.some((h) => h.name === preset.name)) {
+      setShowAdd(false);
       return;
     }
     const habit = {
       id: `${Date.now()}`,
-      name,
-      emoji: newEmoji,
-      color: COLORS[habits.length % COLORS.length],
+      name: preset.name,
+      emoji: preset.emoji,
       createdAt: todayStr(),
     };
     const nextHabits = [...habits, habit];
     setHabits(nextHabits);
     persist(nextHabits, completions);
-    setNewName("");
-    setNewEmoji(EMOJIS[0]);
     setShowAdd(false);
   }
 
@@ -217,26 +297,34 @@ function HabitTracker() {
 
   return (
     <div style={{
-      fontFamily: "Inter, -apple-system, sans-serif", background: "#FFFBF5",
-      minHeight: "100vh", color: "#2B2B2B", padding: "calc(env(safe-area-inset-top) + 24px) 16px 48px",
+      fontFamily: "Inter, -apple-system, sans-serif", background: "#0B0B0F",
+      minHeight: "100vh", color: "#F5F5F7", padding: "calc(env(safe-area-inset-top) + 24px) 16px 48px",
       maxWidth: 420, margin: "0 auto",
     }}>
-      <h1 style={{ fontFamily: "'Baloo 2', sans-serif", fontWeight: 700, fontSize: 24, margin: "0 0 4px" }}>習慣トラッカー</h1>
-      <p style={{ color: "#8A8478", fontSize: 13, margin: "0 0 20px" }}>
+      <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 22, margin: "0 0 4px", letterSpacing: "-0.02em" }}>習慣トラッカー</h1>
+      <p style={{ color: "#8B8B95", fontSize: 13, margin: "0 0 20px" }}>
         {loading ? "読み込み中..." : habits.length === 0
-          ? "続けたい習慣を登録してみましょう"
+          ? "続けたい習慣を選んでみましょう"
           : `今日は ${habits.length} 個中 ${doneTodayCount} 個完了`}
       </p>
 
       {!loading && habits.length > 0 && (
         <div style={{
-          background: "linear-gradient(135deg, #FF6B4A, #FFC145)", borderRadius: 16,
-          padding: "16px 18px", marginBottom: 18, color: "#fff",
+          background: "#16161C", border: "1px solid #26262E", borderRadius: 16,
+          padding: "16px 18px", marginBottom: 18,
         }}>
-          <p style={{ margin: 0, fontSize: 13, fontWeight: 600, opacity: 0.9 }}>今日の達成率</p>
-          <p style={{ margin: "4px 0 0", fontSize: 28, fontWeight: 700, fontFamily: "'Baloo 2', sans-serif" }}>
-            {Math.round((doneTodayCount / habits.length) * 100)}%
-          </p>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+            <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#8B8B95" }}>今日の達成率</p>
+            <p style={{ margin: 0, fontSize: 30, fontWeight: 700, color: ACCENT, fontFamily: "'Space Grotesk', sans-serif" }}>
+              {Math.round((doneTodayCount / habits.length) * 100)}%
+            </p>
+          </div>
+          <div style={{ height: 6, background: "#1E1E26", borderRadius: 999, marginTop: 10, overflow: "hidden" }}>
+            <div style={{
+              height: "100%", width: `${Math.round((doneTodayCount / habits.length) * 100)}%`,
+              background: ACCENT, borderRadius: 999, transition: "width 0.4s ease",
+            }} />
+          </div>
         </div>
       )}
 
@@ -250,71 +338,28 @@ function HabitTracker() {
         />
       ))}
 
-      {!loading && habits.length === 0 && (
-        <div style={{ textAlign: "center", padding: "32px 0", color: "#B8B2A8" }}>
-          <p style={{ fontSize: 40, margin: 0 }}>🌱</p>
-          <p style={{ fontSize: 13, margin: "8px 0 0" }}>まだ習慣が登録されていません</p>
+      {!loading && habits.length === 0 && !showAdd && (
+        <div style={{ textAlign: "center", padding: "32px 0", color: "#4E4E58" }}>
+          <p style={{ fontSize: 13, margin: 0 }}>まだ習慣が登録されていません</p>
         </div>
       )}
 
       {showAdd ? (
-        <div style={{ background: "#fff", borderRadius: 18, padding: "18px", boxShadow: "0 2px 10px rgba(43,43,43,0.06)", marginTop: 8 }}>
-          <p style={{ fontSize: 14, fontWeight: 700, margin: "0 0 12px", fontFamily: "'Baloo 2', sans-serif" }}>新しい習慣を追加</p>
-          <div style={{ display: "flex", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
-            {EMOJIS.map((em) => (
-              <button
-                key={em}
-                onClick={() => setNewEmoji(em)}
-                style={{
-                  fontSize: 20, width: 38, height: 38, borderRadius: 10,
-                  border: newEmoji === em ? "2px solid #FF6B4A" : "2px solid #F2EFE9",
-                  background: "#fff", cursor: "pointer",
-                }}
-              >
-                {em}
-              </button>
-            ))}
-          </div>
-          <input
-            type="text"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder="例: 読書、ストレッチ"
-            style={{
-              width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid #E8E3DA",
-              fontSize: 14, marginBottom: 10, background: "#FFFBF5", color: "#2B2B2B",
-            }}
-          />
-          {error && <p style={{ color: "#E0776B", fontSize: 12, margin: "0 0 10px" }}>{error}</p>}
-          <div style={{ display: "flex", gap: 8 }}>
-            <button
-              onClick={() => { setShowAdd(false); setError(""); }}
-              style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: "1px solid #E8E3DA", background: "#fff", color: "#8A8478", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
-            >
-              キャンセル
-            </button>
-            <button
-              onClick={handleAddHabit}
-              style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: "none", background: "#FF6B4A", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'Baloo 2', sans-serif" }}
-            >
-              追加する
-            </button>
-          </div>
-        </div>
+        <AddHabitPanel onAdd={handleAddPreset} onClose={() => setShowAdd(false)} />
       ) : (
         <button
           onClick={() => setShowAdd(true)}
           style={{
-            width: "100%", padding: "13px 0", borderRadius: 12, border: "2px dashed #E8C4B8",
-            background: "transparent", color: "#FF6B4A", fontSize: 14, fontWeight: 700,
-            cursor: "pointer", marginTop: 8, fontFamily: "'Baloo 2', sans-serif",
+            width: "100%", padding: "13px 0", borderRadius: 12, border: `1px dashed #3A3A44`,
+            background: "transparent", color: ACCENT, fontSize: 13, fontWeight: 700,
+            cursor: "pointer", marginTop: 8, fontFamily: "'Space Grotesk', sans-serif",
           }}
         >
           + 習慣を追加
         </button>
       )}
 
-      <p style={{ fontSize: 11, color: "#C9C4BC", marginTop: 24, textAlign: "center" }}>データはこの端末(ブラウザ)にのみ保存されます。</p>
+      <p style={{ fontSize: 11, color: "#4E4E58", marginTop: 24, textAlign: "center" }}>データはこの端末(ブラウザ)にのみ保存されます。</p>
     </div>
   );
 }
